@@ -1,8 +1,12 @@
 import json
+import logging
 import secrets
 
-from utils.auth import keycloak_openid, USER_INFO_PREFIX
+from utils.auth import keycloak_openid, USER_INFO_PREFIX, verify_role_present
 from conf import redis_client
+
+
+logger = logging.getLogger(__name__)
 
 
 class LoginService:
@@ -12,11 +16,15 @@ class LoginService:
         token_info = keycloak_openid.token(user, password)
         token = token_info["access_token"]
         decoded_token = keycloak_openid.decode_token(token)
+        verify_role_present("read-data", decoded_token)
+
         key = f"{USER_INFO_PREFIX}{decoded_token["jti"]}"
-        redis_client.set(key, json.dumps({"refresh_token": token_info["refresh_token"]}))
+        redis_client.set(
+            key, json.dumps({"refresh_token": token_info["refresh_token"]})
+        )
 
         return {"access_token": token_info["access_token"]}
-    
+
     @staticmethod
     def logout(access_token):
         decoded_token = keycloak_openid.decode_token(access_token)
@@ -26,21 +34,28 @@ class LoginService:
             keycloak_openid.logout(user_data["refresh_token"])
             redis_client.delete(key)
 
-        return {"message": "User was logged out."}
-   
+        return True
+
     @staticmethod
     def login_redirect():
         return keycloak_openid.auth_url(
-            redirect_uri="http://fastapi.main.local/redirect",
+            redirect_uri="http://fastapi.main.local/auth/redirect",
             nonce=secrets.token_urlsafe(),
             scope="email profile",
-            state="login"
+            state="login",
         )
-    
+
     @staticmethod
-    def get_authorization_code(code):
-        return keycloak_openid.token(
-            grant_type='authorization_code',
+    def get_access_token(code):
+        token_info = keycloak_openid.token(
+            grant_type="authorization_code",
             code=code,
-            redirect_uri="http://fastapi.main.local/redirect"
+            redirect_uri="http://fastapi.main.local/auth/redirect",
         )
+        decoded_token = keycloak_openid.decode_token(token_info["access_token"])
+        verify_role_present("read-data", decoded_token)
+        key = f"{USER_INFO_PREFIX}{decoded_token["jti"]}"
+        redis_client.set(
+            key, json.dumps({"refresh_token": token_info["refresh_token"]})
+        )
+        return {"access_token": token_info["access_token"]}

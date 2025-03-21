@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Response
 from fastapi.responses import RedirectResponse
 from typing import Annotated
 
@@ -14,18 +14,26 @@ logger = logging.getLogger(__name__)
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 @auth_router.post("/login")
 async def login(login_data: LoginData) -> dict:
     """
     Login using provided user and password
     """
     try:
-        return LoginService.login(login_data.user, login_data.password)
+        token_info = LoginService.login(login_data.user, login_data.password)
+        return token_info
+    except AssertionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User doesn't have access to the application",
+        )
     except KeycloakAuthenticationError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
         )
+
 
 @auth_router.get("/login", response_class=RedirectResponse)
 async def login_redirect():
@@ -41,24 +49,44 @@ async def login_redirect():
             detail="Login not authorized",
         )
 
+
 @auth_router.post("/logout")
-async def logout(user_info = Depends(user_info)) -> dict:
+async def logout(response: Response, user_info=Depends(user_info)):
     """
     Login using provided user and password
     """
     try:
-        return LoginService.logout(user_info["token"])
+        LoginService.logout(user_info["token"])
+        response.delete_cookie("access_token")
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
+
     except KeycloakAuthenticationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not execute user logout",
         )
 
+
 @auth_router.get("/redirect", include_in_schema=False)
-async def redirect(query: Annotated[AuthParams, Query()]):
+async def redirect(
+    query: Annotated[AuthParams, Query()], response: Response
+) -> RedirectResponse:
     try:
-        access_token_info = LoginService.get_authorization_code(query.code)
-        return access_token_info["access_token"]
+        access_token_info = LoginService.get_access_token(query.code)
+        response = RedirectResponse(url="/pages/home.html")
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {access_token_info['access_token']}",
+            httponly=True,
+        )
+        return response
+
+    except AssertionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User doesn't have access to the application",
+        )
     except KeycloakAuthenticationError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

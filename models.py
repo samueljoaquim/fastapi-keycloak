@@ -8,14 +8,15 @@ class AuthParams(BaseModel):
     iss: str
     code: str
 
+
 class LoginData(BaseModel):
     user: str
     password: str
 
 
 class UserInfo(BaseModel):
-    expiration: datetime
-    token: str
     roles: list
     username: str
     email: str
+    first_name: str
+    last_name: str

@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <script>
+            function perform_write(){
+                fetch("/api/write_data", {method: "POST"})
+                .then((res)=> {
+                    if(res.status == 200)
+                        return res.json()
+                    else
+                        return {"message": "Couldn't perform action"}
+                })
+                .then(json=>document.getElementById("write_block").innerHTML = json.message)
+                .catch(err=>document.getElementById("write_block").innerHTML = json.detail)
+            }
+
+            function logout(){
+                fetch("/auth/logout", {method: "POST"})
+                .then(res=>window.location="/")
+            }
+
+            function user_info() {
+                fetch("/api/user_information")
+                .then(res=>res.json())
+                .then(json => document.getElementById("username").innerHTML = json.first_name)
+            }
+            window.onload = user_info
+        </script>
+    </head>
+    <body>
+        <p>Hello <span id="username"></span>, you are logged in! WELCOME!</p>
+
+        <div id="write_block"></div>
+        <button onclick="perform_write()">Write</button>
+        <button onclick="logout()">Logout</button>
+    </body>
+</html>
