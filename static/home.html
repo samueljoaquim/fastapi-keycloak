@@ -1,5 +1,6 @@
 <html>
     <head>
+        <link rel="stylesheet" href="default.css"/>
         <script>
             function perform_write(){
                 fetch("/api/write_data", {method: "POST"})
@@ -9,7 +10,7 @@
                     else
                         return {"message": "Couldn't perform action"}
                 })
-                .then(json=>document.getElementById("write_block").innerHTML = json.message)
+                .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message}</div>`)
                 .catch(err=>document.getElementById("write_block").innerHTML = json.detail)
             }
 
@@ -27,10 +28,14 @@
         </script>
     </head>
     <body>
-        <p>Hello <span id="username"></span>, you are logged in! WELCOME!</p>
+        <div id="main">
+            <h1>Home</h1>
+            <p>Hello <span id="username"></span>, you are logged in!</p>
 
-        <div id="write_block"></div>
-        <button onclick="perform_write()">Write</button>
-        <button onclick="logout()">Logout</button>
+            <div id="write_block"></div>
+
+            <button onclick="perform_write()">Write</button>
+            <button onclick="logout()">Logout</button>
+        </div>
     </body>
 </html>

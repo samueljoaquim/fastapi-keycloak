@@ -9,7 +9,7 @@ from conf import redis_client
 logger = logging.getLogger(__name__)
 
 
-class LoginService:
+class AuthService:
 
     @staticmethod
     def login(user, password):

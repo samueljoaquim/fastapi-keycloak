@@ -5,7 +5,7 @@ from typing import Annotated
 
 from keycloak import KeycloakAuthenticationError
 
-from services import LoginService
+from services.auth import AuthService
 from models import LoginData, AuthParams
 from utils.auth import user_info
 
@@ -21,7 +21,7 @@ async def login(login_data: LoginData) -> dict:
     Login using provided user and password
     """
     try:
-        token_info = LoginService.login(login_data.user, login_data.password)
+        token_info = AuthService.login(login_data.user, login_data.password)
         return token_info
     except AssertionError:
         raise HTTPException(
@@ -35,13 +35,13 @@ async def login(login_data: LoginData) -> dict:
         )
 
 
-@auth_router.get("/login", response_class=RedirectResponse)
+@auth_router.get("/login", response_class=RedirectResponse, include_in_schema=False)
 async def login_redirect():
     """
     Login using Keycloak interface
     """
     try:
-        auth_url = LoginService.login_redirect()
+        auth_url = AuthService.login_redirect()
         return RedirectResponse(url=auth_url)
     except KeycloakAuthenticationError:
         raise HTTPException(
@@ -56,7 +56,7 @@ async def logout(response: Response, user_info=Depends(user_info)):
     Login using provided user and password
     """
     try:
-        LoginService.logout(user_info["token"])
+        AuthService.logout(user_info["token"])
         response.delete_cookie("access_token")
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
@@ -73,7 +73,7 @@ async def redirect(
     query: Annotated[AuthParams, Query()], response: Response
 ) -> RedirectResponse:
     try:
-        access_token_info = LoginService.get_access_token(query.code)
+        access_token_info = AuthService.get_access_token(query.code)
         response = RedirectResponse(url="/pages/home.html")
         response.set_cookie(
             key="access_token",

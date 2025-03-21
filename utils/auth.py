@@ -1,9 +1,9 @@
 import logging
 
-from fastapi import Depends, HTTPException, status, Cookie
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyCookie
+from jwcrypto.jwt import JWTExpired
 from keycloak import KeycloakOpenID
-from typing import Annotated
 
 from conf import settings, redis_client
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 USER_INFO_PREFIX = "userinfo-"
 
 bearer_scheme = HTTPBearer(auto_error=False)
+cookie_scheme = APIKeyCookie(name="access_token", auto_error=False)
 
 keycloak_openid = KeycloakOpenID(
     server_url=settings.keycloak_server_url,
@@ -24,7 +25,7 @@ keycloak_openid = KeycloakOpenID(
 
 def user_info(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    access_token: Annotated[str | None, Cookie()] = None,
+    access_token: str = Depends(cookie_scheme),
 ):
 
     try:
@@ -35,16 +36,21 @@ def user_info(
             raise Exception()
 
         token = credentials.credentials
+
         token_info = keycloak_openid.decode_token(token)
         key = f"{USER_INFO_PREFIX}{token_info["jti"]}"
+
+        # Verify if user is allowed in redis
         if not redis_client.get(key):
             raise Exception()
+
         return {**token_info, "token": token}
+    except JWTExpired as e:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token is expired")
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED, "User doesn't have access to the resource"
-        )
+        message = e.args[0] if e.args else "User doesn't have access to the resource"
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, message)
 
 
 def verify_role(role):
