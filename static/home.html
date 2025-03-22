@@ -8,6 +8,10 @@
                 .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message?json.message:json.detail}</div>`)
             }
 
+            function edit_profile(){
+                window.location="http://keycloak.dev.local/realms/internal/account?referrer=fastapi-keycloak"
+            }
+
             function logout(){
                 fetch("/auth/logout", {method: "POST"})
                 .then(res=>window.location="/")
@@ -39,6 +43,7 @@
             <div id="write_block"></div>
 
             <button onclick="perform_write()">Write</button>
+            <button onclick="edit_profile()">Edit Profile</button>
             <button onclick="logout()">Logout</button>
         </div>
     </body>

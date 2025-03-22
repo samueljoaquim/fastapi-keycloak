@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import Depends, HTTPException, status, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyCookie
 from jwcrypto.jwt import JWTExpired
-from keycloak import KeycloakOpenID, KeycloakOpenIDConnection, KeycloakAdmin
+from keycloak import KeycloakOpenID
 from keycloak.exceptions import KeycloakPostError
 from conf import settings, redis_client
 
