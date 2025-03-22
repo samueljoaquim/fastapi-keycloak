@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import Depends, HTTPException, status, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyCookie
 from jwcrypto.jwt import JWTExpired
-from keycloak import KeycloakOpenID
+from keycloak import KeycloakOpenID, KeycloakOpenIDConnection, KeycloakAdmin
 from keycloak.exceptions import KeycloakPostError
 from conf import settings, redis_client
 
@@ -78,10 +78,10 @@ def session_data(
 def verify_role(role):
     def inner(session_data=Depends(session_data)):
         try:
-            verify_role_present(role, session_data)
+            _verify_role_present(role, session_data)
         except AssertionError as e:
             logger.warning(
-                f"User '{session_data['preferred_username']}' doesn't have required role '{role}'"
+                f"User '{session_data['decoded']['access_token']['sub']}' doesn't have required role '{role}'"
             )
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN, "User doesn't have access to the resource"
@@ -90,7 +90,7 @@ def verify_role(role):
     return inner
 
 
-def verify_role_present(role, session_data):
+def _verify_role_present(role, session_data):
     assert role in session_data["decoded"]["access_token"]["resource_access"].get(
         "fastapi-keycloak", {}
     ).get("roles", {})
@@ -103,7 +103,8 @@ def save_session_data(token_info):
         **token_info,
         "decoded": {"access_token": decoded_token, "id_token": decoded_id_token},
     }
-    verify_role_present("read-data", session_data)
+
+    _verify_role_present("read-data", session_data)
     key = f"{USER_INFO_PREFIX}{decoded_token["jti"]}"
     redis_client.set(key, json.dumps(session_data))
     return session_data

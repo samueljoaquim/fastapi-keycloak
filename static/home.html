@@ -4,12 +4,8 @@
         <script>
             function perform_write(){
                 fetch("/api/write_data", {method: "POST"})
-                .then((res)=> {
-                    if(res.status == 200)
-                        return res.json()
-                })
-                .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message}</div>`)
-                .catch(err=>document.getElementById("write_block").innerHTML = json.detail)
+                .then(res=>res.json())
+                .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message?json.message:json.detail}</div>`)
             }
 
             function logout(){
@@ -22,7 +18,7 @@
                 .then((res)=> {
                     if(res.status == 200)
                         return res.json()
-                    else if([401, 403].includes(res.status)){
+                    else if(res.status == 401){
                         window.location="/"
                         return null
                     }
