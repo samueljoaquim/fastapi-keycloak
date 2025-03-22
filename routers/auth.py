@@ -7,7 +7,7 @@ from keycloak import KeycloakAuthenticationError
 
 from services.auth import AuthService
 from models import LoginData, AuthParams
-from utils.auth import session_data
+from utils.auth import session_data, set_auth_cookie
 
 
 logger = logging.getLogger(__name__)
@@ -70,16 +70,13 @@ async def logout(response: Response, session_data=Depends(session_data)):
 
 @auth_router.get("/redirect", include_in_schema=False)
 async def redirect(
-    query: Annotated[AuthParams, Query()], response: Response
+    query: Annotated[AuthParams, Query()],
+    response: Response,
 ) -> RedirectResponse:
     try:
-        access_token_info = AuthService.get_access_token(query.code)
+        token_info = AuthService.get_access_token(query.code)
         response = RedirectResponse(url="/pages/home.html")
-        response.set_cookie(
-            key="access_token",
-            value=f"Bearer {access_token_info['access_token']}",
-            httponly=True,
-        )
+        set_auth_cookie(token_info["access_token"], response)
         return response
 
     except AssertionError:

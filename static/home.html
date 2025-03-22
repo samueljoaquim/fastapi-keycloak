@@ -7,8 +7,6 @@
                 .then((res)=> {
                     if(res.status == 200)
                         return res.json()
-                    else
-                        return {"message": "Couldn't perform action"}
                 })
                 .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message}</div>`)
                 .catch(err=>document.getElementById("write_block").innerHTML = json.detail)
@@ -21,8 +19,18 @@
 
             function session_data() {
                 fetch("/api/user_information")
-                .then(res=>res.json())
-                .then(json => document.getElementById("username").innerHTML = json.first_name)
+                .then((res)=> {
+                    if(res.status == 200)
+                        return res.json()
+                    else if([401, 403].includes(res.status)){
+                        window.location="/"
+                        return null
+                    }
+                })
+                .then((json) => {
+                    if(json)
+                        document.getElementById("username").innerHTML = json.first_name
+                })
             }
             window.onload = session_data
         </script>

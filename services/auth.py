@@ -2,7 +2,7 @@ import json
 import logging
 import secrets
 
-from utils.auth import keycloak_openid, USER_INFO_PREFIX, verify_role_present
+from utils.auth import keycloak_openid, USER_INFO_PREFIX, save_session_data
 from conf import redis_client
 
 
@@ -14,7 +14,7 @@ class AuthService:
     @staticmethod
     def login(user, password):
         token_info = keycloak_openid.token(user, password)
-        session_data = AuthService._save_session_data(token_info)
+        session_data = save_session_data(token_info)
         return {"access_token": session_data["access_token"]}
 
     @staticmethod
@@ -44,21 +44,5 @@ class AuthService:
             code=code,
             redirect_uri="http://fastapi.main.local/auth/redirect",
         )
-        session_data = AuthService._save_session_data(token_info)
+        session_data = save_session_data(token_info)
         return {"access_token": session_data["access_token"]}
-
-    @staticmethod
-    def _save_session_data(token_info):
-        decoded_token = keycloak_openid.decode_token(token_info["access_token"])
-        decoded_id_token = keycloak_openid.decode_token(token_info["id_token"])
-        session_data = {
-            **token_info,
-            "decoded": {
-                "access_token": decoded_token,
-                "id_token": decoded_id_token
-            }
-        }
-        verify_role_present("read-data", session_data)
-        key = f"{USER_INFO_PREFIX}{decoded_token["jti"]}"
-        redis_client.set(key, json.dumps(session_data))
-        return session_data
