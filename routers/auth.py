@@ -7,7 +7,7 @@ from keycloak import KeycloakAuthenticationError
 
 from services.auth import AuthService
 from models import LoginData, AuthParams
-from utils.auth import user_info
+from utils.auth import session_data
 
 
 logger = logging.getLogger(__name__)
@@ -51,12 +51,12 @@ async def login_redirect():
 
 
 @auth_router.post("/logout")
-async def logout(response: Response, user_info=Depends(user_info)):
+async def logout(response: Response, session_data=Depends(session_data)):
     """
     Login using provided user and password
     """
     try:
-        AuthService.logout(user_info["token"])
+        AuthService.logout(session_data["access_token"])
         response.delete_cookie("access_token")
         response.status_code = status.HTTP_204_NO_CONTENT
         return response

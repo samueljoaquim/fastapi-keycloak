@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Depends
 
-from utils.auth import verify_role, user_info
+from utils.auth import verify_role, session_data
 from models import UserInfo
 
 
@@ -14,16 +14,17 @@ api_router = APIRouter(
 
 
 @api_router.get("/user_information")
-async def user_information(user_info=Depends(user_info)) -> UserInfo:
+async def user_information(session_data=Depends(session_data)) -> UserInfo:
     """
     Get user information
     """
+    decoded_token = session_data["decoded"]["access_token"]
     user_information = UserInfo(
-        roles=user_info["resource_access"]["fastapi-keycloak"]["roles"],
-        username=user_info["preferred_username"],
-        email=user_info["email"],
-        first_name=user_info["given_name"],
-        last_name=user_info["family_name"],
+        roles=decoded_token["resource_access"]["fastapi-keycloak"]["roles"],
+        username=decoded_token["preferred_username"],
+        email=decoded_token["email"],
+        first_name=decoded_token["given_name"],
+        last_name=decoded_token["family_name"],
     )
 
     return user_information

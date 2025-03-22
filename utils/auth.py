@@ -1,3 +1,4 @@
+import json
 import logging
 
 from fastapi import Depends, HTTPException, status
@@ -23,7 +24,7 @@ keycloak_openid = KeycloakOpenID(
 )
 
 
-def user_info(
+def session_data(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     access_token: str = Depends(cookie_scheme),
 ):
@@ -40,11 +41,12 @@ def user_info(
         token_info = keycloak_openid.decode_token(token)
         key = f"{USER_INFO_PREFIX}{token_info["jti"]}"
 
-        # Verify if user is allowed in redis
-        if not redis_client.get(key):
-            raise Exception()
+        # Verify if session data is available in Redis
+        session_data = redis_client.get(key)
+        if not session_data:
+            raise Exception("No session data")
 
-        return {**token_info, "token": token}
+        return json.loads(session_data)
     except JWTExpired as e:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token is expired")
     except Exception as e:
@@ -54,12 +56,12 @@ def user_info(
 
 
 def verify_role(role):
-    def inner(user_info=Depends(user_info)):
+    def inner(session_data=Depends(session_data)):
         try:
-            verify_role_present(role, user_info)
+            verify_role_present(role, session_data)
         except AssertionError as e:
             logger.warning(
-                f"User '{user_info['preferred_username']}' doesn't have required role '{role}'"
+                f"User '{session_data['preferred_username']}' doesn't have required role '{role}'"
             )
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN, "User doesn't have access to the resource"
@@ -68,7 +70,7 @@ def verify_role(role):
     return inner
 
 
-def verify_role_present(role, decoded_token):
-    assert role in decoded_token["resource_access"].get("fastapi-keycloak", {}).get(
+def verify_role_present(role, session_data):
+    assert role in session_data["decoded"]["access_token"]["resource_access"].get("fastapi-keycloak", {}).get(
         "roles", {}
     )

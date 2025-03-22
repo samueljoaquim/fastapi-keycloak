@@ -19,12 +19,12 @@
                 .then(res=>window.location="/")
             }
 
-            function user_info() {
+            function session_data() {
                 fetch("/api/user_information")
                 .then(res=>res.json())
                 .then(json => document.getElementById("username").innerHTML = json.first_name)
             }
-            window.onload = user_info
+            window.onload = session_data
         </script>
     </head>
     <body>
