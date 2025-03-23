@@ -1,9 +1,7 @@
-import json
 import logging
 import secrets
 
-from utils.auth import keycloak_openid, USER_INFO_PREFIX, save_session_data
-from conf import redis_client
+from utils.session import keycloak_openid, save_session_data
 
 
 logger = logging.getLogger(__name__)
@@ -18,13 +16,9 @@ class AuthService:
         return {"access_token": session_data["access_token"]}
 
     @staticmethod
-    def logout(access_token):
-        decoded_token = keycloak_openid.decode_token(access_token)
-        key = f"{USER_INFO_PREFIX}{decoded_token["jti"]}"
-        session_data = json.loads(redis_client.get(key))
-        if session_data and "refresh_token" in session_data:
+    def logout(session_data):
+        if "refresh_token" in session_data:
             keycloak_openid.logout(session_data["refresh_token"])
-            redis_client.delete(key)
 
         return True
 

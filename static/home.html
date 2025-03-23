@@ -3,7 +3,13 @@
         <link rel="stylesheet" href="default.css"/>
         <script>
             function perform_write(){
-                fetch("/api/write_data", {method: "POST"})
+                fetch("/api/write_data", {
+                    method: "POST",
+                    body: JSON.stringify({"test": "this is test"}),
+                    headers: {
+                        "Content-Type": "application/json",                        
+                    }
+                })
                 .then(res=>res.json())
                 .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message?json.message:json.detail}</div>`)
             }

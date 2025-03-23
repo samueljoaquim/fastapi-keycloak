@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Depends
 
-from utils.auth import verify_role, session_data
+from utils.session import verify_role, session_data
 from models import UserInfo
 
 
@@ -31,8 +31,10 @@ async def user_information(session_data=Depends(session_data)) -> UserInfo:
 
 
 @api_router.post("/write_data", dependencies=[Depends(verify_role("write-data"))])
-async def protected2_endpoint() -> dict:
+async def protected2_endpoint(info: dict, session_data=Depends(session_data)) -> dict:
     """
     Write role example
     """
+    session_data["request_context"]["info"] = info
+
     return {"message": "Data was written"}

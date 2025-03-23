@@ -1,7 +1,6 @@
 import json
 import logging
 
-from contextvars import ContextVar
 from datetime import datetime
 
 from fastapi import Depends, HTTPException, status, Response
@@ -25,8 +24,6 @@ keycloak_openid = KeycloakOpenID(
     realm_name=settings.keycloak_realm,
     client_secret_key=settings.keycloak_client_secret,
 )
-
-request_context = ContextVar("request_context", default=dict())
 
 
 def session_data(
@@ -60,7 +57,7 @@ def session_data(
                     raise Exception("No session data")
                 session_data = json.loads(session_data_str)
 
-        return session_data
+        return {**session_data, "request_context": dict()}
 
     except KeycloakPostError as ke:
         logger.exception(ke)
@@ -132,3 +129,9 @@ def set_auth_cookie(access_token, response: Response):
         value=f"Bearer {access_token}",
         httponly=True,
     )
+
+
+def remove_session(session_data, response: Response):
+    key = f"{USER_INFO_PREFIX}{session_data["decoded"]["access_token"]["jti"]}"
+    redis_client.delete(key)
+    response.delete_cookie("access_token")

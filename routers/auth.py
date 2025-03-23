@@ -7,7 +7,7 @@ from keycloak import KeycloakAuthenticationError
 
 from services.auth import AuthService
 from models import LoginData, AuthParams
-from utils.auth import session_data, set_auth_cookie
+from utils.session import session_data, remove_session, set_auth_cookie
 
 
 logger = logging.getLogger(__name__)
@@ -56,8 +56,8 @@ async def logout(response: Response, session_data=Depends(session_data)):
     Login using provided user and password
     """
     try:
-        AuthService.logout(session_data["access_token"])
-        response.delete_cookie("access_token")
+        AuthService.logout(session_data)
+        remove_session(session_data, response)
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 
