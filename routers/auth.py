@@ -2,6 +2,7 @@ import logging
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Response
 from fastapi.responses import RedirectResponse
 from typing import Annotated
+from jwcrypto.jwt import JWTExpired
 
 from keycloak import KeycloakAuthenticationError
 
@@ -79,6 +80,11 @@ async def redirect(
         set_auth_cookie(token_info["access_token"], response)
         return response
 
+    except JWTExpired as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User doesn't have access to the application",
+        )
     except AssertionError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
