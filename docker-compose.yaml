@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  fastapi:
+    image: docker.io/samueljoaquim/sjoaquim-private:latest
+    container_name: fastapi
+    networks:
+      - services
+    environment:
+      - APP_FORCE_HTTPS=true
+      - KEYCLOAK_SERVER_URL=https://cloud.sjoaquim.com/auth/
+      - KEYCLOAK_CLIENT_ID=fastapi-keycloak
+      - KEYCLOAK_CLIENT_SECRET=**************
+      - KEYCLOAK_REALM=internal
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  redis:
+    image: redis
+    restart: always
+    container_name: redis
+    networks:
+      - services
+
+networks:
+  services:
+    name: services
+    external: true

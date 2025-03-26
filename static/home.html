@@ -3,7 +3,7 @@
         <link rel="stylesheet" href="default.css"/>
         <script>
             function perform_write(){
-                fetch("/api/write_data", {
+                fetch(`${base_url_element.value}api/write_data`, {
                     method: "POST",
                     body: JSON.stringify({"test": "this is test"}),
                     headers: {
@@ -15,27 +15,31 @@
             }
 
             function edit_profile(){
-                window.location="http://keycloak.dev.local/realms/internal/account?referrer=fastapi-keycloak"
+                window.location=document.getElementById("profile_base_url").value
             }
 
             function logout(){
-                fetch("/auth/logout", {method: "POST"})
-                .then(res=>window.location="/")
+                fetch(`${base_url_element.value}auth/logout`, {method: "POST"})
+                .then(res=>window.location=`${base_url_element.value}/`)
             }
 
             function session_data() {
-                fetch("/api/user_information")
+                base_url_element = document.getElementById("base_url")
+                base_url_element.value = window.location.href.replace("pages/home.html", "")
+                fetch(`${base_url_element.value}api/user_information`)
                 .then((res)=> {
                     if(res.status == 200)
                         return res.json()
                     else if(res.status == 401){
-                        window.location="/"
+                        window.location=`${base_url_element.value}/`
                         return null
                     }
                 })
                 .then((json) => {
-                    if(json)
+                    if(json){
                         document.getElementById("username").innerHTML = json.first_name
+                        document.getElementById("profile_base_url").value = json.profile_base_url
+                    }
                 })
             }
             window.onload = session_data
@@ -51,6 +55,8 @@
             <button onclick="perform_write()">Write</button>
             <button onclick="edit_profile()">Edit Profile</button>
             <button onclick="logout()">Logout</button>
+            <input type="hidden" id="base_url" name="base_url" value="" />
+            <input type="hidden" id="profile_base_url" name="profile_base_url" value="" />
         </div>
     </body>
 </html>

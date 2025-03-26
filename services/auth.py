@@ -23,20 +23,20 @@ class AuthService:
         return True
 
     @staticmethod
-    def login_redirect():
+    def login_redirect(base_url):
         return keycloak_openid.auth_url(
-            redirect_uri="http://fastapi.main.local/auth/redirect",
+            redirect_uri=f"{base_url}auth/redirect",
             nonce=secrets.token_urlsafe(),
             scope="email profile openid",
             state="login",
         )
 
     @staticmethod
-    def get_access_token(code):
+    def get_access_token(base_url, code):
         token_info = keycloak_openid.token(
             grant_type="authorization_code",
             code=code,
-            redirect_uri="http://fastapi.main.local/auth/redirect",
+            redirect_uri=f"{base_url}auth/redirect",
         )
         session_data = save_session_data(token_info)
         return {"access_token": session_data["access_token"]}

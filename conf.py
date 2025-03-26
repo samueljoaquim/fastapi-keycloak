@@ -1,3 +1,4 @@
+from typing import Optional
 from redis import Redis
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
@@ -5,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
+    app_force_https: bool
     keycloak_server_url: str
     keycloak_realm: str
     keycloak_client_id: str

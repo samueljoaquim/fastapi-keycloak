@@ -1,8 +1,9 @@
 import logging
-from fastapi import APIRouter, Depends, Query, HTTPException, status, Response
+from fastapi import APIRouter, Depends, Query, HTTPException, Request, status, Response
 from fastapi.responses import RedirectResponse
 from typing import Annotated
 from jwcrypto.jwt import JWTExpired
+from conf import settings
 
 from keycloak import KeycloakAuthenticationError
 
@@ -37,12 +38,13 @@ async def login(login_data: LoginData) -> dict:
 
 
 @auth_router.get("/login", response_class=RedirectResponse, include_in_schema=False)
-async def login_redirect():
+async def login_redirect(request: Request):
     """
     Login using Keycloak interface
     """
     try:
-        auth_url = AuthService.login_redirect()
+        base_url = request.base_url.replace(scheme="https") if settings.app_force_https else request.base_url
+        auth_url = AuthService.login_redirect(base_url)
         return RedirectResponse(url=auth_url)
     except KeycloakAuthenticationError:
         raise HTTPException(
@@ -71,12 +73,14 @@ async def logout(response: Response, session_data=Depends(session_data)):
 
 @auth_router.get("/redirect", include_in_schema=False)
 async def redirect(
+    request: Request,
     query: Annotated[AuthParams, Query()],
     response: Response,
 ) -> RedirectResponse:
     try:
-        token_info = AuthService.get_access_token(query.code)
-        response = RedirectResponse(url="/pages/home.html")
+        base_url = request.base_url.replace(scheme="https") if settings.app_force_https else request.base_url
+        token_info = AuthService.get_access_token(base_url, query.code)
+        response = RedirectResponse(url=f"{base_url}pages/home.html")
         set_auth_cookie(token_info["access_token"], response)
         return response
 

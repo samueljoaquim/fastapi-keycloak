@@ -1,3 +1,16 @@
+:root {
+    --primary-fg-color: #ffffff;
+    --primary-bg-color: #C3DBC5;
+    --primary-fg-hover-color: #ffffff;
+    --primary-bg-hover-color: #7798AB;
+
+    --title-fg-color: #0D1B1E;
+    --title-bg-color: #E8DCB9;
+
+    --feature-fg-color: #482728;
+    --feature-bg-color: #F2CEE6;
+}
+
 body{
     font-family: Arial, Helvetica, sans-serif;
 }
@@ -6,16 +19,37 @@ body{
     margin: auto;
     min-width: 800px;
     width: 90vw;
-    border: 1px gray solid;
     padding: 1%;
 }
 
 #write_block {
-    margin: 1%;
-    padding: 1%;
+    margin-top: 1%;
+    margin-bottom: 3%;
     width: 40%;
 }
 
 #write_block>div {
-    border: 1px gray solid;
+    color: var(--feature-fg-color);
+    background-color: var(--feature-bg-color);
+    padding: 2%;
+    font-weight: bold;
+}
+
+button {
+    border: 2px var(--primary-bg-color) solid;
+    font-weight: bold;
+    color: var(--primary-fg-color);
+    background-color: var(--primary-bg-color);
+}
+
+button:hover {
+    border: 2px var(--primary-bg-hover-color) solid;
+    color: var(--primary-fg-hover-color);
+    background-color: var(--primary-bg-hover-color);
+}
+
+h1 {
+    padding: 1%;
+    color: var(--title-fg-color);
+    background-color: var(--title-bg-color);
 }

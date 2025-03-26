@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from datetime import datetime
 
 
 class AuthParams(BaseModel):
@@ -20,3 +19,5 @@ class UserInfo(BaseModel):
     email: str
     first_name: str
     last_name: str
+    profile_base_url: str
+    base_url: str
