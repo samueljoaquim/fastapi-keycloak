@@ -20,7 +20,7 @@
 
             function logout(){
                 fetch(`${base_url_element.value}auth/logout`, {method: "POST"})
-                .then(res=>window.location=`${base_url_element.value}/`)
+                .then(res=>window.location=`${base_url_element.value}`)
             }
 
             function session_data() {
