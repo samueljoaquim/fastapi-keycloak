@@ -13,6 +13,10 @@ class LoginData(BaseModel):
     password: str
 
 
+class UserInput(BaseModel):
+    username: str
+
+
 class UserInfo(BaseModel):
     roles: list
     username: str

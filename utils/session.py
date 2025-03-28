@@ -101,7 +101,7 @@ def save_session_data(token_info):
         "decoded": {"access_token": decoded_token, "id_token": decoded_id_token},
     }
 
-    _verify_role_present("read-data", session_data)
+    _verify_role_present(settings.app_read_role, session_data)
     key = f"{USER_INFO_PREFIX}{decoded_token["jti"]}"
     redis_client.set(key, json.dumps(session_data))
     return session_data

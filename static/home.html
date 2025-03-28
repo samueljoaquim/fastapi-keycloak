@@ -2,16 +2,20 @@
     <head>
         <link rel="stylesheet" href="default.css"/>
         <script>
-            function perform_write(){
-                fetch(`${base_url_element.value}api/write_data`, {
+            function add_user_to_default_group(){
+                fetch(`${base_url_element.value}api/add_user_to_group`, {
                     method: "POST",
-                    body: JSON.stringify({"test": "this is test"}),
+                    body: JSON.stringify({"username": document.getElementById("username_to_add").value}),
                     headers: {
                         "Content-Type": "application/json",                        
                     }
                 })
                 .then(res=>res.json())
-                .then(json=>document.getElementById("write_block").innerHTML = `<div>${json.message?json.message:json.detail}</div>`)
+                .then((json)=> {
+                    if(json.detail){
+                        document.getElementById("write_block").innerHTML = `<div>${json.detail}</div>`
+                    }
+                })
             }
 
             function edit_profile(){
@@ -52,7 +56,8 @@
 
             <div id="write_block"></div>
 
-            <button onclick="perform_write()">Write</button>
+            <input type="text" id="username_to_add" name="username_to_add" placeholder="username" />
+            <button onclick="add_user_to_default_group()">Add User to Default Group</button>
             <button onclick="edit_profile()">Edit Profile</button>
             <button onclick="logout()">Logout</button>
             <input type="hidden" id="base_url" name="base_url" value="" />
