@@ -4,8 +4,6 @@ services:
   fastapi:
     image: docker.io/samueljoaquim/sjoaquim-private:latest
     container_name: fastapi
-    networks:
-      - services
     environment:
       - APP_FORCE_HTTPS=true
       - KEYCLOAK_SERVER_URL=https://keycloak.cloud.sjoaquim.com/
@@ -14,10 +12,6 @@ services:
       - KEYCLOAK_REALM=internal
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    command: pipenv run fastapi run main.py
-    labels:
-      caddy: fastapi.cloud.sjoaquim.com
-      caddy.reverse_proxy: "{{upstreams 8000}}"
 
   redis:
     image: redis
@@ -25,8 +19,3 @@ services:
     container_name: redis
     networks:
       - services
-
-networks:
-  services:
-    name: services
-    external: true
