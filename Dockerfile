@@ -10,4 +10,4 @@ ADD routers ./routers
 ADD services ./services
 ADD static ./static
 ADD utils ./utils
-CMD ["pipenv", "run", "fastapi", "run", "./main.py", "--root-path", "/fastapi"]
+CMD ["pipenv", "run", "fastapi", "run", "./main.py"]
