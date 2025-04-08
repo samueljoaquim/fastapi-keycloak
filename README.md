@@ -5,7 +5,6 @@ To run it, first you need to install the dependencies:
 pipenv install --dev
 ```
 > If you don't have `pipenv` installed in your environment, you can install it by running `pip install pipenv`.
-{.is-info}
 
 Make sure you create a client for your app in Keycloak. If you are using `http://localhost:8000/` as your app's URL, the redirect URL in Keycloak should be `http://localhost:8000/auth/redirect`. Also, you need to create two roles in your client: `read-data` and `write-data`. Then, create two groups with the following roles associated: 
 * `fastapi-keycloak-read` - assing the `read-data` role to it in `Role mapping`.
@@ -31,7 +30,6 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
 > This app uses an unauthenticated `redis` server for caching the user session info. If you don't have Redis running, you can use Podman / Docker to spin a new instance: `docker run --name redis -p 6379:6379 -d redis`
-{.is-info}
 
 `APP_FORCE_HTTPS` should be false, unless you intend to run it in an HTTPS environment. The `KEYCLOAK_` (without the `ADMIN_`) entries should match those from your Keycloak client. The `KEYCLOAK_ADMIN_` ones enable a feature for being able to add an user to a realm group to exemplify access management through Keycloak's management API. If you want to test it, use the `admin-cli` client info from your master realm (client id will be "admin-cli", and you can grab the secret from the credentials tab).
 
@@ -59,7 +57,7 @@ Once the user is authenticated in Keycloak, the `redirect` function in `routes/a
 
 Now, we are ready for the last redirect, which is to send the user to the actual home page in `pages/home.html`. This page will use javascript's `fetch` to validate the user and get user information, like the first name:
 
-<img src="/screenshot-fastapi-logged-in.png" style="width: 50%; min-width: 300px" />
+<img src="https://www.sjoaquim.com/screenshot-fastapi-logged-in.png" style="width: 50%; min-width: 300px" />
 
 ### The Session
 In the `utils/session.py` file, there's a function called `session_data`. This function is called every time a user makes a new request that requires an authenticated user. It does quite a lot of things: validates the token using the `python-keycloak` library; if the token is expired, tries to refresh it with Keycloak; verified that that token has already stablished a session within the application (which should be available in redis); finally, it returns the saved session data.
